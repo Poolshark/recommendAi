@@ -3,12 +3,26 @@
 
 from flask import Flask, request, jsonify
 from textblob import TextBlob
-
+import git
 app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
     return 'Hello from Flask! - test'
+
+@app.route('/git_update', methods=['POST'])
+def git_update():
+    data = get_json_payload()
+    if not data:
+        return jsonify({"error": "Missing or invalid JSON payload."}), 400
+    
+    repo = git.Repo(data['./recommendAi'])
+    origin = repo.remotes.origin
+    origin.pull()
+    
+    return jsonify({"message": "Repository updated successfully."}), 200
+    
+    
 
 def get_json_payload():
     """
