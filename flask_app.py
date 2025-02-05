@@ -12,11 +12,7 @@ def hello_world():
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
-    data = get_json_payload()
-    if not data:
-        return jsonify({"error": "Missing or invalid JSON payload."}), 400
-    
-    repo = git.Repo(data['./recommendAi'])
+    repo = git.Repo('./recommendAi')
     origin = repo.remotes.origin
     origin.pull()
 
