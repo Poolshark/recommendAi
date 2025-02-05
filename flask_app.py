@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello from Flask! - test'
+    return 'Hello from Flask! - test with Git Update'
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
@@ -19,7 +19,7 @@ def git_update():
     repo = git.Repo(data['./recommendAi'])
     origin = repo.remotes.origin
     origin.pull()
-    
+
     return jsonify({"message": "Repository updated successfully."}), 200
     
     
