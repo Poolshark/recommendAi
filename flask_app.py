@@ -16,7 +16,6 @@ def git_update():
     try:
         repo = Repo('./mysite')  # Use current directory instead of hardcoded path
         origin = repo.remotes.origin
-        # repo.create_head('master', origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
         origin.pull()
         return jsonify({"message": "Repository updated successfully."}), 200
     except Exception as e:
@@ -87,9 +86,9 @@ def sentiment_analysis():
     return jsonify(sentiment_result)
 
 
-#if __name__ == '__main__':
+if __name__ == '__main__':
     # When running locally, enable debug mode for development
-#    app.run(debug=True)
+    app.run(debug=True)
 
 
 # This file contains the WSGI configuration required to serve up your
