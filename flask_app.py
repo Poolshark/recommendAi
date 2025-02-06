@@ -16,7 +16,7 @@ def git_update():
     try:
         repo = Repo('./mysite')  # Use current directory instead of hardcoded path
         origin = repo.remotes.origin
-        repo.create_head('master', origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
+        # repo.create_head('master', origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
         origin.pull()
         return jsonify({"message": "Repository updated successfully."}), 200
     except Exception as e:
