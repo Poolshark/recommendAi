@@ -1,4 +1,3 @@
-
 # A very simple Flask Hello World app for you to get started with...
 
 from flask import Flask, request, jsonify
@@ -8,15 +7,18 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello from Flask! - test with Git'
+    return 'Hello from Flask! - test with New Git'
+
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
-    repo = git.Repo('./recommendAi')
-    origin = repo.remotes.origin
-    origin.pull()
-
-    return jsonify({"message": "Repository updated successfully."}), 200
+    try:
+        repo = git.Repo('.')  # Use current directory instead of hardcoded path
+        origin = repo.remotes.origin
+        origin.pull()
+        return jsonify({"message": "Repository updated successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
     
 
