@@ -2,7 +2,8 @@
 
 from flask import Flask, request, jsonify
 from textblob import TextBlob
-import git
+from git import Repo
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -13,8 +14,9 @@ def hello_world():
 @app.route('/git_update', methods=['POST'])
 def git_update():
     try:
-        repo = git.Repo('./recommendAi')  # Use current directory instead of hardcoded path
+        repo = Repo('./recommendAi')  # Use current directory instead of hardcoded path
         origin = repo.remotes.origin
+        repo.create_head('master', origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
         origin.pull()
         return jsonify({"message": "Repository updated successfully."}), 200
     except Exception as e:
