@@ -13,7 +13,7 @@ def hello_world():
 @app.route('/git_update', methods=['POST'])
 def git_update():
     try:
-        repo = git.Repo('.')  # Use current directory instead of hardcoded path
+        repo = git.Repo('./recommendAi')  # Use current directory instead of hardcoded path
         origin = repo.remotes.origin
         origin.pull()
         return jsonify({"message": "Repository updated successfully."}), 200
