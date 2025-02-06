@@ -14,7 +14,7 @@ def hello_world():
 @app.route('/git_update', methods=['POST'])
 def git_update():
     try:
-        repo = Repo('./recommendAi')  # Use current directory instead of hardcoded path
+        repo = Repo('.')  # Use current directory instead of hardcoded path
         origin = repo.remotes.origin
         repo.create_head('master', origin.refs.main).set_tracking_branch(origin.refs.main).checkout()
         origin.pull()
