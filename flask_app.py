@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello from Flask! - test with New Git'
+    return 'Hello from Flask! - test with Git'
 
 
 @app.route('/git_update', methods=['POST'])
