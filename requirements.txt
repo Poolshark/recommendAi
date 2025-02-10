@@ -1,3 +1,4 @@
 Flask
 textblob
 GitPython
+Flask-Session

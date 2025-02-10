@@ -1,10 +1,14 @@
 # A very simple Flask Hello World app for you to get started with...
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from textblob import TextBlob
 from git import Repo
 
+from modules.Input import InputModule
+
 app = Flask(__name__)
+
+input_module = InputModule(app)
 
 @app.route('/')
 def hello_world():
@@ -32,6 +36,10 @@ def get_json_payload():
         return request.get_json()
     else:
         return None
+    
+@app.route('/start_conversation', methods=['POST'])
+def start_conversation():
+    return input_module.start_conversation()
 
 # Endpoint to process conversation input
 @app.route('/process_input', methods=['POST'])
@@ -47,12 +55,15 @@ def process_input():
 
     user_text = data['text']
 
-    # Here, implement your conversation management logic.
-    # For this example, we simply echo the user's input.
-    response_text = f"You said: {user_text}. What would you like to do next?"
+    return input_module.process_input(user_text)
 
-    # Return the response as JSON
-    return jsonify({"response": response_text})
+    # ----- LEGACY
+    # # Here, implement your conversation management logic.
+    # # For this example, we simply echo the user's input.
+    # response_text = f"You said: {user_text}. What would you like to do next?"
+
+    # # Return the response as JSON
+    # return jsonify({"response": response_text})
 
 
 # Endpoint to perform sentiment analysis
