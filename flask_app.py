@@ -1,6 +1,7 @@
 # A very simple Flask Hello World app for you to get started with...
 import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_session import Session
 from textblob import TextBlob
 from git import Repo
@@ -9,18 +10,19 @@ from modules.Conversation import Conversation
 # Initialize Flask app
 # --------------------------------
 app = Flask(__name__)
+CORS(app)
+
 # For simplicity, we're using Flask's built-in session.
 # For production, consider server-side session storage.
-app.secret_key = os.getenv('SESSION_SECRET')
-
-# Optionally, configure Flask-Session to store session data on the filesystem:
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = os.getenv('SESSION_SECRET', 'dev-key-123')  # Add fallback key
+app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')  # Specify session directory
 Session(app)
 # --------------------------------
 
 conversation = Conversation()
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def start_conversation():
     return conversation.start_conversation()
 

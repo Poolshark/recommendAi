@@ -3,3 +3,4 @@ textblob
 GitPython
 Flask-Session
 requests
+flask-cors

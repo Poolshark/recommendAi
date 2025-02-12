@@ -74,8 +74,20 @@ class Conversation(Sentiment, Response):
             session['current_step'] = current + 1
         else:
             # Stay at the last step if completed
-            session['current_step'] = current  
+            session['current_step'] = current
+    
+    def get_next_step(self, next_step: int, urgent_steps: dict = None, found_info_steps: dict = None):
+        
+        steps = urgent_steps if urgent_steps else found_info_steps or {}
 
+        while next_step < len(self.conversation_flow):
+            if self.conversation_flow[next_step]["state"] in steps:
+              next_step += 1
+            else:
+              break
+
+        return next_step
+    
     # Start or reset the conversation
     # This method is called via the /start_conversation endpoint
     def start_conversation(self):
@@ -84,6 +96,7 @@ class Conversation(Sentiment, Response):
         # Initialize or reset the conversation
         session['responses'] = {}
         session['current_step'] = 0
+        session['essential_info'] = {}
         session['sentiment'] = 'neutral'
         
         # Return initial greeting
@@ -123,6 +136,7 @@ class Conversation(Sentiment, Response):
                     'ask_time_day',
                     'ask_guests',
                     'ask_location',
+                    'ask_cusine',
                     'ask_dietary',
                     'confirm_booking'
                 }
@@ -138,14 +152,19 @@ class Conversation(Sentiment, Response):
         # Get next question based on current state
         next_step = current_step + 1
 
+        # Skip question if user is in urgent mode
+        if session.get('is_urgent', True):
+            next_step = self.get_next_step(next_step=next_step, urgent_steps=self.urgent_essential_states)
+
         # Skip question if it's an already answered essential question
         found_info = self.check_responses(responses)
         if found_info:
-          while next_step < len(self.conversation_flow):
-            if self.conversation_flow[next_step]["state"] in found_info:
-              next_step += 1
-            else:
-              break
+            next_step = self.get_next_step(next_step=next_step, found_info_steps=found_info)
+          # while next_step < len(self.conversation_flow):
+          #   if self.conversation_flow[next_step]["state"] in found_info:
+          #     next_step += 1
+          #   else:
+          #     break
 
         if next_step < len(self.conversation_flow):
             question = self.conversation_flow[next_step]["question"]
@@ -176,6 +195,6 @@ class Conversation(Sentiment, Response):
                 "next_state": self.conversation_flow[next_step]["state"],
                 "sentiment": sentiment,
                 "current_conversation": responses,
-                "found_info": found_info,
+                "essential_info": session.get('essential_info', {}),
                 "current_step": current_step
             }), 200

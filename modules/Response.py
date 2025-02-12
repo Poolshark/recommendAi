@@ -1,5 +1,5 @@
 import re
-
+from flask import session, jsonify
 class Response:
     def __init__(self):
         
@@ -14,11 +14,18 @@ class Response:
 
     def check_responses(self, responses: dict):
         # Check all responses for essential info
-        all_responses = ' '.join(str(value) for value in responses.values() if value is not None).lower()
+        # all_responses = ' '.join(str(value) for value in responses.values() if value is not None).lower()
         found_info = {}
+        essential_info = session.get('essential_info', {})
 
         for key, pattern in self.essential_info.items():
-            if re.search(pattern, all_responses, re.IGNORECASE):
-                found_info[key] = True
+            for response in responses.values():
+                if response and re.search(pattern, response.lower(), re.IGNORECASE):
+                    test = re.search(pattern, response.lower(), re.IGNORECASE)
+                    found_info[key] = True
+                    essential_info[key] = test.group(0);
+
+        
+        session['essential_info'] = essential_info
 
         return found_info

@@ -27,6 +27,15 @@ class Sentiment:
             }
         }
 
+        self.urgent_essential_states = {
+            'ask_time_day',
+            'ask_guests',
+            'ask_location',
+            'ask_cusine',
+            'ask_dietary',
+            'confirm_booking'
+        }
+
     def analyze_urgency(self, user_text: str) -> bool:
         """
         Analyze if the user's message indicates urgency
