@@ -1,18 +1,28 @@
 # A very simple Flask Hello World app for you to get started with...
-
-from flask import Flask, request, jsonify, session
+import os
+from flask import Flask, request, jsonify
+from flask_session import Session
 from textblob import TextBlob
 from git import Repo
-
-from modules.Input import InputModule
-
+from modules.Conversation import Conversation
+# --------------------------------
+# Initialize Flask app
+# --------------------------------
 app = Flask(__name__)
+# For simplicity, we're using Flask's built-in session.
+# For production, consider server-side session storage.
+app.secret_key = os.getenv('SESSION_SECRET')
 
-input_module = InputModule(app)
+# Optionally, configure Flask-Session to store session data on the filesystem:
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
+# --------------------------------
+
+conversation = Conversation()
 
 @app.route('/')
-def hello_world():
-    return 'Hello from Flask! - test with Git this should be the last test'
+def start_conversation():
+    return conversation.start_conversation()
 
 
 @app.route('/git_update', methods=['POST'])
@@ -37,12 +47,12 @@ def get_json_payload():
     else:
         return None
     
-@app.route('/start_conversation', methods=['POST'])
-def start_conversation():
-    return input_module.start_conversation()
+# @app.route('/start_conversation', methods=['POST'])
+# def start_conversation():
+#     return input_module.start_conversation()
 
 # Endpoint to process conversation input
-@app.route('/process_input', methods=['POST'])
+@app.route('/conversation', methods=['POST'])
 def process_input():
     # Attempt to retrieve the JSON payload
     data = get_json_payload()
@@ -55,7 +65,7 @@ def process_input():
 
     user_text = data['text']
 
-    return input_module.process_input(user_text)
+    return conversation.process_input(user_text)
 
     # ----- LEGACY
     # # Here, implement your conversation management logic.
@@ -66,7 +76,7 @@ def process_input():
     # return jsonify({"response": response_text})
 
 
-# Endpoint to perform sentiment analysis
+# Endpoint to perform sentiment analysis - TESTING
 @app.route('/sentiment_analysis', methods=['POST'])
 def sentiment_analysis():
     # Retrieve the JSON payload

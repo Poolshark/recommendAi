@@ -2,3 +2,4 @@ Flask
 textblob
 GitPython
 Flask-Session
+requests
