@@ -27,14 +27,14 @@ class Sentiment:
             }
         }
 
-        self.urgent_essential_states = {
-            'ask_time_day',
-            'ask_guests',
-            'ask_location',
-            'ask_cusine',
-            'ask_dietary',
-            'confirm_booking'
-        }
+        # self.urgent_essential_states = {
+        #     'ask_time_day',
+        #     'ask_guests',
+        #     'ask_location',
+        #     'ask_cusine',
+        #     'ask_dietary',
+        #     'confirm_booking'
+        # }
 
     def analyze_urgency(self, user_text: str) -> bool:
         """
@@ -99,17 +99,18 @@ class Sentiment:
         question = question.replace("Could you tell me", "What is")
         
         # Add urgency indicators when appropriate
-        if "when" in question.lower():
-            question = "ASAP: " + question
+        # if "when" in question.lower():
+        #     question = "ASAP: " + question
         
         return question
 
     def get_follow_up_question(self, sentiment, responses):
         """Generate follow-up questions based on sentiment and previous responses"""
+
         if sentiment == "urgent":
             if "time_day" not in responses:
-                return "How soon do you need this?"
-            return "Anything else crucial I should know?"
+                return "What time do you need the table?"
+            return "Anything else I should know for the booking?"
         elif sentiment == "sad":
             return "Would you like me to focus on restaurants known for their comfort food or peaceful atmosphere?"
         elif sentiment == "happy" and "occasion" in responses:
@@ -118,6 +119,7 @@ class Sentiment:
 
     def get_sentiment_response(self, sentiment, user_text):
         """Generate appropriate responses based on sentiment"""
+
         if sentiment == "urgent":
             return "I understand you're in a hurry. I'll help you find something quickly."
         elif sentiment == "happy":

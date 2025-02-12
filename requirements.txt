@@ -4,3 +4,4 @@ GitPython
 Flask-Session
 requests
 flask-cors
+python-dotenv

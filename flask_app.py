@@ -6,11 +6,16 @@ from flask_session import Session
 from textblob import TextBlob
 from git import Repo
 from modules.Conversation import Conversation
+from dotenv import load_dotenv
+
 # --------------------------------
 # Initialize Flask app
 # --------------------------------
 app = Flask(__name__)
 CORS(app)
+
+# Load environment variables
+load_dotenv()
 
 # For simplicity, we're using Flask's built-in session.
 # For production, consider server-side session storage.

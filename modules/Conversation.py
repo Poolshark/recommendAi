@@ -10,56 +10,70 @@ class Conversation(Sentiment, Response):
         # Define the conversation flow as a list of steps
         self.conversation_flow = [
             {
+                "id": 0,
                 "state": "greet",
+                "is_essential": False,
                 "question": "Hello! I'm Recommendy your restaurant recommendation assistant. How can I help you today? (For example: 'I'm looking for a restaurant for dinner' or 'I need a quick lunch spot')"
             },
             {
+                "id": 1,
+                "is_essential": False,
                 "state": "ask_occasion",
                 "question": lambda sentiment: self.sentiment_responses[sentiment]["ask_occasion"]
             },
             {
+                "id": 2,
+                "is_essential": False,
                 "state": "ask_atmosphere",
                 "question": lambda sentiment: self.sentiment_responses[sentiment]["ask_atmosphere"]
             },
             {
+                "id": 3,
+                "is_essential": True,
                 "state": "ask_booking_history",
                 "question": "Have you dined with any of our recommended restaurants before?"
             },
             {
+                "id": 4,
+                "is_essential": True,
                 "state": "ask_dietary",
                 "question": "Do you have any dietary restrictions or preferences I should know about?"
             },
             {
+                "id": 5,
+                "is_essential": True,
                 "state": "ask_cuisine",
                 "question": "What type of cuisine interests you today?"
             },
             {
+                "id": 6,
+                "is_essential": True,
                 "state": "ask_time_day",
                 "question": "When would you like to dine? Please provide day and time."
             },
             {
+                "id": 7,
+                "is_essential": True,
                 "state": "ask_guests",
                 "question": "How many people will be joining you?"
             },
             {
+                "id": 8,
+                "is_essential": True,
                 "state": "ask_location",
                 "question": "Which area would you prefer to dine in?"
             },
             {
+                "id": 9,
+                "is_essential": False,
                 "state": "ask_budget",
-                "question": "What's your comfortable budget range for this meal?"
+                "question": "What's your comfortable budget range for this meal? Options are 'cheap', 'moderate' and 'expensive'."
             },
             {
+                "id": 10,
+                "is_essential": False,
                 "state": "suggest_special",
                 "question": lambda sentiment: self.sentiment_responses[sentiment]["suggest_special"]
-            },
-            {
-                "state": "ask_ratings",
-                "question": "Would you like to see ratings and reviews for the restaurants I have in mind?"
-            },
-            {
-                "state": "confirm_booking",
-                "question": "Just to confirm, you want to book a table for {guests} at a {cuisine} restaurant in {location} for {time}. Is that correct?"
             }
         ]
 
@@ -76,15 +90,25 @@ class Conversation(Sentiment, Response):
             # Stay at the last step if completed
             session['current_step'] = current
     
-    def get_next_step(self, next_step: int, urgent_steps: dict = None, found_info_steps: dict = None):
+    def get_next_step(self, next_step: int):
         
-        steps = urgent_steps if urgent_steps else found_info_steps or {}
+        is_urgent = session.get('is_urgent', False)
 
         while next_step < len(self.conversation_flow):
-            if self.conversation_flow[next_step]["state"] in steps:
-              next_step += 1
+            
+            # Check if the next step is already answered in a previous step
+            if self.conversation_flow[next_step]["state"] in session.get('user_info', {}):
+                next_step += 1
+                
+                # if is_urgent and self.conversation_flow[next_step]["is_essential"]:
+                #     break;
+                # else:
+                #     next_step += 1
             else:
-              break
+                if is_urgent and not self.conversation_flow[next_step]["is_essential"]:
+                    next_step += 1
+                else:
+                    break;
 
         return next_step
     
@@ -95,10 +119,10 @@ class Conversation(Sentiment, Response):
 
         # Initialize or reset the conversation
         session['responses'] = {}
+        session['user_info'] = {}
         session['current_step'] = 0
-        session['essential_info'] = {}
+        session['is_urgent'] = False
         session['sentiment'] = 'neutral'
-        
         # Return initial greeting
         return jsonify({
             "state": self.conversation_flow[0]["state"],
@@ -117,12 +141,12 @@ class Conversation(Sentiment, Response):
         responses[current_state] = user_text
         session['responses'] = responses
  
-        # Only analyze sentiment after the greeting
+        # Only analyse sentiment after the greeting
         if current_state != "greet":
             sentiment = session.get('sentiment', 'neutral')
             is_urgent = session.get('is_urgent', False)
         else:
-            # First user input - analyze sentiment and urgency
+            # First user input - analyse sentiment and urgency
             is_urgent = self.analyze_urgency(user_text)
             sentiment = "urgent" if is_urgent else self.analyze_sentiment(user_text)
             
@@ -130,41 +154,29 @@ class Conversation(Sentiment, Response):
             session['sentiment'] = sentiment
             session['is_urgent'] = is_urgent
 
-            # If urgent, modify the conversation flow to skip non-essential questions
-            if is_urgent:
-                essential_states = {
-                    'ask_time_day',
-                    'ask_guests',
-                    'ask_location',
-                    'ask_cusine',
-                    'ask_dietary',
-                    'confirm_booking'
-                }
-                
-                # Find next essential question
-                next_step = current_step + 1
-                while (next_step < len(self.conversation_flow) - 1 and 
-                       self.conversation_flow[next_step]["state"] not in essential_states):
-                    next_step += 1
-                
-                session['current_step'] = next_step - 1  # -1 because advance_step will increment it
+        
 
         # Get next question based on current state
         next_step = current_step + 1
 
         # Skip question if user is in urgent mode
-        if session.get('is_urgent', True):
-            next_step = self.get_next_step(next_step=next_step, urgent_steps=self.urgent_essential_states)
+        # if session.get('is_urgent'):
+        #     next_step = self.get_next_step(next_step=next_step, is_urgent=True)
 
-        # Skip question if it's an already answered essential question
-        found_info = self.check_responses(responses)
-        if found_info:
-            next_step = self.get_next_step(next_step=next_step, found_info_steps=found_info)
-          # while next_step < len(self.conversation_flow):
-          #   if self.conversation_flow[next_step]["state"] in found_info:
-          #     next_step += 1
-          #   else:
-          #     break
+        # Skip question if it's an already answered essential question or if
+        # the user is in urgent mode and the question is not essential
+        self.check_responses(responses)
+        if session.get('user_info'):
+            next_step = self.get_next_step(next_step=next_step)
+
+
+        # If the current step is an essential step but no user info os stored, repeat the question
+        if self.conversation_flow[current_step]["is_essential"] and current_state not in session.get('user_info').keys():
+            return jsonify({
+                "state": current_state,
+                "question": self.conversation_flow[current_step]["question"],
+                "response": "I'm sorry, I didn't catch that. Can you please repeat?"
+            }), 200
 
         if next_step < len(self.conversation_flow):
             question = self.conversation_flow[next_step]["question"]
@@ -195,6 +207,13 @@ class Conversation(Sentiment, Response):
                 "next_state": self.conversation_flow[next_step]["state"],
                 "sentiment": sentiment,
                 "current_conversation": responses,
-                "essential_info": session.get('essential_info', {}),
+                "user_info": session.get('user_info', {}),
                 "current_step": current_step
+            }), 200
+        else:
+            # If the conversation is complete, return the final response
+            return jsonify({
+                "response": "Final response",
+                "sentiment": sentiment,
+                "current_conversation": responses,
             }), 200
