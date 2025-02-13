@@ -7,6 +7,9 @@ from textblob import TextBlob
 from git import Repo
 from modules.Conversation import Conversation
 from dotenv import load_dotenv
+from datetime import timedelta
+from flask_sqlalchemy import SQLAlchemy
+from models.recommendation import Recommendation, db
 
 # --------------------------------
 # Initialize Flask app
@@ -17,25 +20,37 @@ CORS(app)
 # Load environment variables
 load_dotenv()
 
-# For simplicity, we're using Flask's built-in session.
-# For production, consider server-side session storage.
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SECRET_KEY'] = os.getenv('SESSION_SECRET', 'dev-key-123')  # Add fallback key
-app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')  # Specify session directory
-Session(app)
-# --------------------------------
+# Database configuration for session storage
+app.config.update(
+    SESSION_TYPE='sqlalchemy',
+    SQLALCHEMY_DATABASE_URI='sqlite:///sessions.db',
+    SQLALCHEMY_TRACK_MODIFICATIONS=False,
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1),
+    SECRET_KEY=os.getenv('SESSION_SECRET')
+)
+
+# Initialize SQLAlchemy with app
+db.init_app(app)
+
+# Create tables
+with app.app_context():
+    db.create_all()
 
 conversation = Conversation()
 
 @app.route('/', methods=['GET', 'POST'])
 def start_conversation():
-    return conversation.start_conversation()
+    data = get_json_payload()
+    if not data or 'user_id' not in data:
+        return jsonify({"error": "Missing user_id in request"}), 400
+    
+    return conversation.start_conversation(data['user_id'])
 
 
 @app.route('/git_update', methods=['POST'])
 def git_update():
     try:
-        repo = Repo('./mysite')  # Use current directory instead of hardcoded path
+        repo = Repo('./mysite')
         origin = repo.remotes.origin
         origin.pull()
         return jsonify({"message": "Repository updated successfully."}), 200
@@ -53,10 +68,6 @@ def get_json_payload():
         return request.get_json()
     else:
         return None
-    
-# @app.route('/start_conversation', methods=['POST'])
-# def start_conversation():
-#     return input_module.start_conversation()
 
 # Endpoint to process conversation input
 @app.route('/conversation', methods=['POST'])
@@ -66,22 +77,14 @@ def process_input():
     if not data:
         return jsonify({"error": "Missing or invalid JSON payload."}), 400
 
-    # Ensure the payload contains the 'text' key
-    if 'text' not in data:
-        return jsonify({"error": "Missing 'text' parameter in JSON payload."}), 400
+    # Ensure the payload contains required keys
+    if 'text' not in data or 'user_id' not in data:
+        return jsonify({"error": "Missing 'text' or 'user_id' in JSON payload."}), 400
 
     user_text = data['text']
+    user_id = data['user_id']
 
-    return conversation.process_input(user_text)
-
-    # ----- LEGACY
-    # # Here, implement your conversation management logic.
-    # # For this example, we simply echo the user's input.
-    # response_text = f"You said: {user_text}. What would you like to do next?"
-
-    # # Return the response as JSON
-    # return jsonify({"response": response_text})
-
+    return conversation.process_input(user_text, user_id)
 
 # Endpoint to perform sentiment analysis - TESTING
 @app.route('/sentiment_analysis', methods=['POST'])
@@ -113,6 +116,11 @@ def sentiment_analysis():
 
     return jsonify(sentiment_result)
 
+# Add endpoint to get user's recommendations
+@app.route('/recommendations/<user_id>', methods=['GET'])
+def get_recommendations(user_id):
+    recommendations = Recommendation.query.filter_by(user_id=user_id).order_by(Recommendation.created_at.desc()).all()
+    return jsonify([r.to_dict() for r in recommendations])
 
 if __name__ == '__main__':
     # When running locally, enable debug mode for development

@@ -1,6 +1,7 @@
 from flask import session, jsonify
 from modules.Response import Response
 from modules.Sentiment import Sentiment
+from models.recommendation import Recommendation, db
 
 class Conversation(Sentiment, Response):
     def __init__(self):
@@ -78,32 +79,27 @@ class Conversation(Sentiment, Response):
         ]
 
     # Helper function: get current conversation index
-    def get_current_step(self):
-        return session.get('current_step', 0)
+    def get_current_step(self, user_id: str):
+        return session.get(f'current_step_{user_id}', 0)
 
     # Helper function: advance conversation state
-    def advance_step(self):
-        current = self.get_current_step()
+    def advance_step(self, user_id: str):
+        current = self.get_current_step(user_id)
         if current < len(self.conversation_flow) - 1:
-            session['current_step'] = current + 1
+            session['current_step_{user_id}'] = current + 1
         else:
             # Stay at the last step if completed
-            session['current_step'] = current
+            session['current_step_{user_id}'] = current
     
-    def get_next_step(self, next_step: int):
+    def get_next_step(self, next_step: int, user_id: str):
         
         is_urgent = session.get('is_urgent', False)
 
         while next_step < len(self.conversation_flow):
             
             # Check if the next step is already answered in a previous step
-            if self.conversation_flow[next_step]["state"] in session.get('user_info', {}):
+            if self.conversation_flow[next_step]["state"] in session.get('user_info_{user_id}', {}):
                 next_step += 1
-                
-                # if is_urgent and self.conversation_flow[next_step]["is_essential"]:
-                #     break;
-                # else:
-                #     next_step += 1
             else:
                 if is_urgent and not self.conversation_flow[next_step]["is_essential"]:
                     next_step += 1
@@ -114,16 +110,16 @@ class Conversation(Sentiment, Response):
     
     # Start or reset the conversation
     # This method is called via the /start_conversation endpoint
-    def start_conversation(self):
+    def start_conversation(self, user_id: str):
         """Initialize or reset the conversation"""
-
-        # Initialize or reset the conversation
-        session['responses'] = {}
-        session['user_info'] = {}
-        session['current_step'] = 0
-        session['is_urgent'] = False
-        session['sentiment'] = 'neutral'
-        # Return initial greeting
+        
+        # Initialize or reset the conversation for this user
+        session[f'responses_{user_id}'] = {}
+        session[f'user_info_{user_id}'] = {}
+        session[f'current_step_{user_id}'] = 0
+        session[f'is_urgent_{user_id}'] = False
+        session[f'sentiment_{user_id}'] = 'neutral'
+        
         return jsonify({
             "state": self.conversation_flow[0]["state"],
             "question": self.conversation_flow[0]["question"]
@@ -131,28 +127,27 @@ class Conversation(Sentiment, Response):
     
     # Process user input and return the next question
     # This method is called via the /process_input endpoint
-    def process_input(self, user_text: str):
-        # Retrieve current conversation step index
-        current_step = self.get_current_step()
+    def process_input(self, user_text: str, user_id: str):
+        current_step = self.get_current_step(user_id)
         current_state = self.conversation_flow[current_step]["state"]
 
         # Extract any essential info from current response
-        responses = session.get('responses', {})
+        responses = session.get(f'responses_{user_id}', {})
         responses[current_state] = user_text
-        session['responses'] = responses
+        session[f'responses_{user_id}'] = responses
  
         # Only analyse sentiment after the greeting
         if current_state != "greet":
-            sentiment = session.get('sentiment', 'neutral')
-            is_urgent = session.get('is_urgent', False)
+            sentiment = session.get(f'sentiment_{user_id}', 'neutral')
+            is_urgent = session.get(f'is_urgent_{user_id}', False)
         else:
             # First user input - analyse sentiment and urgency
             is_urgent = self.analyze_urgency(user_text)
             sentiment = "urgent" if is_urgent else self.analyze_sentiment(user_text)
             
             # Store in session
-            session['sentiment'] = sentiment
-            session['is_urgent'] = is_urgent
+            session[f'sentiment_{user_id}'] = sentiment
+            session[f'is_urgent_{user_id}'] = is_urgent
 
         
 
@@ -166,12 +161,12 @@ class Conversation(Sentiment, Response):
         # Skip question if it's an already answered essential question or if
         # the user is in urgent mode and the question is not essential
         self.check_responses(responses)
-        if session.get('user_info'):
-            next_step = self.get_next_step(next_step=next_step)
+        if session.get(f'user_info_{user_id}'):
+            next_step = self.get_next_step(next_step=next_step, user_id=user_id)
 
 
         # If the current step is an essential step but no user info os stored, repeat the question
-        if self.conversation_flow[current_step]["is_essential"] and current_state not in session.get('user_info').keys():
+        if self.conversation_flow[current_step]["is_essential"] and current_state not in session.get(f'user_info_{user_id}').keys():
             return jsonify({
                 "state": current_state,
                 "question": self.conversation_flow[current_step]["question"],
@@ -199,7 +194,7 @@ class Conversation(Sentiment, Response):
                     next_question = f"{next_question}\n{follow_up}"
 
             # Advance to the next step
-            self.advance_step()
+            self.advance_step(user_id)
 
             return jsonify({
                 "response": self.get_sentiment_response(sentiment, user_text) if current_state != "greet" else "Thank you for sharing! Let me help you find the perfect restaurant.",
@@ -207,7 +202,7 @@ class Conversation(Sentiment, Response):
                 "next_state": self.conversation_flow[next_step]["state"],
                 "sentiment": sentiment,
                 "current_conversation": responses,
-                "user_info": session.get('user_info', {}),
+                "user_info": session.get(f'user_info_{user_id}', {}),
                 "current_step": current_step
             }), 200
         else:
@@ -217,3 +212,16 @@ class Conversation(Sentiment, Response):
                 "sentiment": sentiment,
                 "current_conversation": responses,
             }), 200
+
+    def store_recommendation(self, user_id: str, recommendation_data: dict):
+        recommendation = Recommendation(
+            user_id=user_id,
+            restaurant_name=recommendation_data.get('name'),
+            cuisine=recommendation_data.get('cuisine'),
+            location=recommendation_data.get('location'),
+            guests=recommendation_data.get('guests'),
+            dietary=recommendation_data.get('dietary'),
+            booking_time=recommendation_data.get('booking_time')
+        )
+        db.session.add(recommendation)
+        db.session.commit()

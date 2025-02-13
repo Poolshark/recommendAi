@@ -1,0 +1,28 @@
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+
+db = SQLAlchemy()
+
+class Recommendation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(100), nullable=False)
+    restaurant_name = db.Column(db.String(200))
+    cuisine = db.Column(db.String(100))
+    location = db.Column(db.String(200))
+    guests = db.Column(db.Integer)
+    dietary = db.Column(db.String(200))
+    booking_time = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'restaurant_name': self.restaurant_name,
+            'cuisine': self.cuisine,
+            'location': self.location,
+            'guests': self.guests,
+            'dietary': self.dietary,
+            'booking_time': self.booking_time.isoformat() if self.booking_time else None,
+            'created_at': self.created_at.isoformat()
+        } 
