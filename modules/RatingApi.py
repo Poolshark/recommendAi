@@ -1,5 +1,9 @@
 import os
 import requests
+from flask import jsonify
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class RatingApi:
     def __init__(self):
@@ -33,7 +37,7 @@ class RatingApi:
 
     # Function to fetch restaurant ratings from Google Places
     def fetch_google_ratings(self, location: str, cuisine: str):
-        url = f'{self.config.google.base_url}?query={cuisine}+restaurants+in+{location}&key={self.config.google.api_key}'
+        url = f'{self.config["google"]["base_url"]}?query={cuisine}+restaurants+in+{location}&key={self.config["google"]["api_key"]}'
         
         response = requests.get(url)
         if response.status_code == 200:

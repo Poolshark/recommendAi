@@ -2,11 +2,13 @@ from flask import session, jsonify
 from modules.Response import Response
 from modules.Sentiment import Sentiment
 from models.recommendation import Recommendation, db
+from modules.Recommend import Recommend
 
 class Conversation(Sentiment, Response):
     def __init__(self):
         Sentiment.__init__(self)  # Initialize Sentiment
         Response.__init__(self)   # Initialize Response
+        self.recommend = Recommend()
 
         # Define the conversation flow as a list of steps
         self.conversation_flow = [
@@ -86,19 +88,19 @@ class Conversation(Sentiment, Response):
     def advance_step(self, user_id: str):
         current = self.get_current_step(user_id)
         if current < len(self.conversation_flow) - 1:
-            session['current_step_{user_id}'] = current + 1
+            session[f'current_step_{user_id}'] = current + 1
         else:
             # Stay at the last step if completed
-            session['current_step_{user_id}'] = current
+            session[f'current_step_{user_id}'] = current
     
     def get_next_step(self, next_step: int, user_id: str):
         
-        is_urgent = session.get('is_urgent', False)
+        is_urgent = session.get(f'is_urgent_{user_id}', False)
 
         while next_step < len(self.conversation_flow):
             
             # Check if the next step is already answered in a previous step
-            if self.conversation_flow[next_step]["state"] in session.get('user_info_{user_id}', {}):
+            if self.conversation_flow[next_step]["state"] in session.get(f'user_info_{user_id}', {}):
                 next_step += 1
             else:
                 if is_urgent and not self.conversation_flow[next_step]["is_essential"]:
@@ -121,6 +123,7 @@ class Conversation(Sentiment, Response):
         session[f'sentiment_{user_id}'] = 'neutral'
         
         return jsonify({
+            "user_id": user_id,
             "state": self.conversation_flow[0]["state"],
             "question": self.conversation_flow[0]["question"]
         })
@@ -154,13 +157,9 @@ class Conversation(Sentiment, Response):
         # Get next question based on current state
         next_step = current_step + 1
 
-        # Skip question if user is in urgent mode
-        # if session.get('is_urgent'):
-        #     next_step = self.get_next_step(next_step=next_step, is_urgent=True)
-
         # Skip question if it's an already answered essential question or if
         # the user is in urgent mode and the question is not essential
-        self.check_responses(responses)
+        self.check_responses(responses=responses, user_id=user_id)
         if session.get(f'user_info_{user_id}'):
             next_step = self.get_next_step(next_step=next_step, user_id=user_id)
 
@@ -202,13 +201,28 @@ class Conversation(Sentiment, Response):
                 "next_state": self.conversation_flow[next_step]["state"],
                 "sentiment": sentiment,
                 "current_conversation": responses,
+                "user_id": user_id,
                 "user_info": session.get(f'user_info_{user_id}', {}),
                 "current_step": current_step
             }), 200
         else:
+            # If we have all essential info, make a recommendation
+            user_info = session.get(f'user_info_{user_id}', {})
+            # essential_fields = {'ask_cuisine', 'ask_location', 'ask_guests', 'ask_time_day', 'ask_dietary'}
+            # if all(field in user_info for field in essential_fields):
+            recommendation = self.recommend.get_recommendation(user_info, user_id)
+            if recommendation:
+                return jsonify({
+                    "response": f"I recommend {recommendation['restaurant_name']}!",
+                    "recommendation": recommendation,
+                    "current_conversation": responses,
+                    "user_id": user_id,
+                    "user_info": user_info
+                }), 200
+                
             # If the conversation is complete, return the final response
             return jsonify({
-                "response": "Final response",
+                "response": "Could not find a restaurant that matches your preferences. Please try again with different preferences.",
                 "sentiment": sentiment,
                 "current_conversation": responses,
             }), 200

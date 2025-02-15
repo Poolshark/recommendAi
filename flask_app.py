@@ -26,7 +26,10 @@ app.config.update(
     SQLALCHEMY_DATABASE_URI='sqlite:///sessions.db',
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     PERMANENT_SESSION_LIFETIME=timedelta(days=1),
-    SECRET_KEY=os.getenv('SESSION_SECRET')
+    SECRET_KEY=os.getenv('SESSION_SECRET', "dev-123"),
+    # SESSION_COOKIE_SECURE=False,
+    # SESSION_COOKIE_HTTPONLY=True,
+    # SESSION_COOKIE_SAMESITE='Lax'
 )
 
 # Initialize SQLAlchemy with app
@@ -119,8 +122,16 @@ def sentiment_analysis():
 # Add endpoint to get user's recommendations
 @app.route('/recommendations/<user_id>', methods=['GET'])
 def get_recommendations(user_id):
+    # This query finds all recommendations for a specific user
     recommendations = Recommendation.query.filter_by(user_id=user_id).order_by(Recommendation.created_at.desc()).all()
     return jsonify([r.to_dict() for r in recommendations])
+
+# @app.after_request
+# def add_header(response):
+#     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+#     response.headers['Pragma'] = 'no-cache'
+#     response.headers['Expires'] = '-1'
+#     return response
 
 if __name__ == '__main__':
     # When running locally, enable debug mode for development

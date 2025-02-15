@@ -13,6 +13,13 @@ class Recommendation(db.Model):
     dietary = db.Column(db.String(200))
     booking_time = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    atmosphere = db.Column(db.String(100))
+    budget = db.Column(db.String(50))
+    rating = db.Column(db.Float)
+    total_ratings = db.Column(db.Integer)
+    price_level = db.Column(db.Integer)
+    address = db.Column(db.String(200))
+    place_id = db.Column(db.String(100))
     
     def to_dict(self):
         return {
@@ -24,5 +31,12 @@ class Recommendation(db.Model):
             'guests': self.guests,
             'dietary': self.dietary,
             'booking_time': self.booking_time.isoformat() if self.booking_time else None,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            'atmosphere': self.atmosphere,
+            'budget': self.budget,
+            'rating': self.rating,
+            'total_ratings': self.total_ratings,
+            'price_level': self.price_level,
+            'address': self.address,
+            'place_id': self.place_id
         } 
