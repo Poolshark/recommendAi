@@ -1,7 +1,8 @@
-from models.recommendation import Recommendation, db
-from modules.RatingApi import RatingApi
-from datetime import datetime
 import re
+from flask import session
+from datetime import datetime
+from modules.RatingApi import RatingApi
+from models.recommendation import Recommendation, db
 
 class Recommend:
     def __init__(self):
@@ -156,6 +157,7 @@ class Recommend:
         # Store recommendation with user_id
         recommendation = Recommendation(
             user_id=user_id,
+            user_name=session.get(f'user_name_{user_id}', ''),
             restaurant_name=recommendation_data['name'],
             cuisine=recommendation_data['cuisine'],
             location=recommendation_data['location'],

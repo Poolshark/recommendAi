@@ -47,7 +47,7 @@ def start_conversation():
     if not data or 'user_id' not in data:
         return jsonify({"error": "Missing user_id in request"}), 400
     
-    return conversation.start_conversation(data['user_id'])
+    return conversation.start_conversation(data['user_id'], user_name=data['user_name'])
 
 
 @app.route('/git_update', methods=['POST'])

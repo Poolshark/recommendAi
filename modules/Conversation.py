@@ -1,8 +1,8 @@
 from flask import session, jsonify
 from modules.Response import Response
 from modules.Sentiment import Sentiment
-from models.recommendation import Recommendation, db
 from modules.Recommend import Recommend
+from models.recommendation import Recommendation, db
 
 class Conversation(Sentiment, Response):
     def __init__(self):
@@ -16,7 +16,7 @@ class Conversation(Sentiment, Response):
                 "id": 0,
                 "state": "greet",
                 "is_essential": False,
-                "question": "Hello! I'm Recommendy your restaurant recommendation assistant. How can I help you today? (For example: 'I'm looking for a restaurant for dinner' or 'I need a quick lunch spot')"
+                "question": lambda name: f"Hello {name}! I'm Recommendy your restaurant recommendation assistant. I can help you find the perfect restaurant for your needs. What are you looking for?"
             },
             {
                 "id": 1,
@@ -112,7 +112,7 @@ class Conversation(Sentiment, Response):
     
     # Start or reset the conversation
     # This method is called via the /start_conversation endpoint
-    def start_conversation(self, user_id: str):
+    def start_conversation(self, user_id: str, user_name: str="Mr. Food"):
         """Initialize or reset the conversation"""
         
         # Initialize or reset the conversation for this user
@@ -121,11 +121,13 @@ class Conversation(Sentiment, Response):
         session[f'current_step_{user_id}'] = 0
         session[f'is_urgent_{user_id}'] = False
         session[f'sentiment_{user_id}'] = 'neutral'
-        
+        session[f'user_name_{user_id}'] = user_name
+
         return jsonify({
             "user_id": user_id,
+            "user_name": user_name,
             "state": self.conversation_flow[0]["state"],
-            "question": self.conversation_flow[0]["question"]
+            "next_question": self.conversation_flow[0]["question"](user_name)
         })
     
     # Process user input and return the next question

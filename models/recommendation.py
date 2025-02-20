@@ -6,6 +6,7 @@ db = SQLAlchemy()
 class Recommendation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String(100), nullable=False)
+    user_name = db.Column(db.String(100))
     restaurant_name = db.Column(db.String(200))
     cuisine = db.Column(db.String(100))
     location = db.Column(db.String(200))
