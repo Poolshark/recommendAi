@@ -51,15 +51,6 @@ def get_json_payload():
 # --------------------------------
 # Routes
 # --------------------------------
-# Endpoint to start a new conversation
-@app.route('/', methods=['GET', 'POST'])
-def start_conversation():
-    data = get_json_payload()
-    if not data or 'user_id' not in data:
-        return jsonify({"error": "Missing user_id in request"}), 400
-    
-    return conversation.start_conversation(data['user_id'], user_name=data['user_name'])
-
 # Endpoint to update the repository
 @app.route('/git_update', methods=['POST'])
 def git_update():
@@ -71,6 +62,23 @@ def git_update():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+# Endpoint to start a new conversation
+@app.route('/', methods=['GET', 'POST'])
+def start_conversation():
+    data = get_json_payload()
+    if not data or 'user_id' not in data:
+        return jsonify({"error": "Missing user_id in request"}), 400
+    
+    # Start a new conversation if the user wants to do so
+    if 'start_new_conversation' in data and data['start_new_conversation']:
+        return conversation.start_conversation(data['user_id'], user_name=data['user_name'])
+    
+    # Start a new conversation and get recommendations
+    conv = conversation.start_conversation(data['user_id'], user_name=data['user_name'])
+    recommendations = Recommendation.query.filter_by(user_id=data['user_id']).order_by(Recommendation.created_at.desc()).all()
+    conv['recommendations'] = [r.to_dict() for r in recommendations]
+
+    return jsonify(conv)
     
 # Endpoint to process conversation input
 @app.route('/conversation', methods=['POST'])

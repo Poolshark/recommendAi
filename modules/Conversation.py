@@ -123,12 +123,12 @@ class Conversation(Sentiment, Response):
         session[f'sentiment_{user_id}'] = 'neutral'
         session[f'user_name_{user_id}'] = user_name
 
-        return jsonify({
+        return {
             "user_id": user_id,
             "user_name": user_name,
             "state": self.conversation_flow[0]["state"],
             "next_question": self.conversation_flow[0]["question"](user_name)
-        })
+        }
     
     # Process user input and return the next question
     # This method is called via the /process_input endpoint
