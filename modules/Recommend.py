@@ -100,7 +100,7 @@ class Recommend:
             if dietary:
                 if any(dietary.lower() in tag.lower() for tag in restaurant.get('types', [])):
                     score += 3
-                elif any(dietary.lower() in restaurant.get('name', '').lower()):
+                elif dietary.lower() in restaurant.get('name', '').lower():
                     score += 2
             
             # Atmosphere matching
@@ -136,6 +136,8 @@ class Recommend:
             return None
         
         best_match = scored_restaurants[0][0]
+
+        print("\n\n\nBEST MATCH", best_match, "\n\n\n")
         
         # Enhanced recommendation data
         recommendation_data = {

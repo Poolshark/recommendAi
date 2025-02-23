@@ -1,14 +1,14 @@
 # A very simple Flask Hello World app for you to get started with...
 import os
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from flask_session import Session
-from textblob import TextBlob
 from git import Repo
-from modules.Conversation import Conversation
+from models.db import db
+from flask_cors import CORS
+from textblob import TextBlob
 from dotenv import load_dotenv
 from datetime import timedelta
-from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask import Flask, request, jsonify
+from modules.Conversation import Conversation
 from models.recommendation import Recommendation, db
 
 # --------------------------------
@@ -23,24 +23,35 @@ load_dotenv()
 # Database configuration for session storage
 app.config.update(
     SESSION_TYPE='sqlalchemy',
-    SQLALCHEMY_DATABASE_URI='sqlite:///sessions.db',
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     PERMANENT_SESSION_LIFETIME=timedelta(days=1),
+    SQLALCHEMY_DATABASE_URI='sqlite:///sessions.db',
     SECRET_KEY=os.getenv('SESSION_SECRET', "dev-123"),
-    # SESSION_COOKIE_SECURE=False,
-    # SESSION_COOKIE_HTTPONLY=True,
-    # SESSION_COOKIE_SAMESITE='Lax'
 )
 
-# Initialize SQLAlchemy with app
+# Initialise SQLAlchemy with app
 db.init_app(app)
+migrate = Migrate(app, db)
 
-# Create tables
-with app.app_context():
-    db.create_all()
-
+# Initialise other modules
 conversation = Conversation()
 
+# Helper function to retrieve JSON data from the request
+def get_json_payload():
+    """
+    Helper function to retrieve JSON data from the request.
+    Returns None if the request data is not in JSON format.
+    """
+    if request.is_json:
+        return request.get_json()
+    else:
+        return None
+
+
+# --------------------------------
+# Routes
+# --------------------------------
+# Endpoint to start a new conversation
 @app.route('/', methods=['GET', 'POST'])
 def start_conversation():
     data = get_json_payload()
@@ -49,7 +60,7 @@ def start_conversation():
     
     return conversation.start_conversation(data['user_id'], user_name=data['user_name'])
 
-
+# Endpoint to update the repository
 @app.route('/git_update', methods=['POST'])
 def git_update():
     try:
@@ -61,17 +72,6 @@ def git_update():
         return jsonify({"error": str(e)}), 500
     
     
-
-def get_json_payload():
-    """
-    Helper function to retrieve JSON data from the request.
-    Returns None if the request data is not in JSON format.
-    """
-    if request.is_json:
-        return request.get_json()
-    else:
-        return None
-
 # Endpoint to process conversation input
 @app.route('/conversation', methods=['POST'])
 def process_input():
@@ -125,13 +125,6 @@ def get_recommendations(user_id):
     # This query finds all recommendations for a specific user
     recommendations = Recommendation.query.filter_by(user_id=user_id).order_by(Recommendation.created_at.desc()).all()
     return jsonify([r.to_dict() for r in recommendations])
-
-# @app.after_request
-# def add_header(response):
-#     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-#     response.headers['Pragma'] = 'no-cache'
-#     response.headers['Expires'] = '-1'
-#     return response
 
 if __name__ == '__main__':
     # When running locally, enable debug mode for development

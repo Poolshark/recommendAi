@@ -6,3 +6,4 @@ requests
 flask-cors
 python-dotenv
 Flask-SQLAlchemy
+Flask-Migrate

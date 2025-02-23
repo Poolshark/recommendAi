@@ -1,7 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from models.db import db  # Import the shared db instance
 from datetime import datetime
-
-db = SQLAlchemy()
 
 class Recommendation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -26,6 +24,7 @@ class Recommendation(db.Model):
         return {
             'id': self.id,
             'user_id': self.user_id,
+            'user_name': self.user_name,
             'restaurant_name': self.restaurant_name,
             'cuisine': self.cuisine,
             'location': self.location,

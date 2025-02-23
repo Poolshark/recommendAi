@@ -34,49 +34,49 @@ class Conversation(Sentiment, Response):
                 "id": 3,
                 "is_essential": True,
                 "state": "ask_booking_history",
-                "question": "Have you dined with any of our recommended restaurants before?"
+                "question": "Have you dined with any of our recommended restaurants before?",
+                "specify_question": "Please answer: yes, no, first time, or regular"
             },
             {
                 "id": 4,
                 "is_essential": True,
                 "state": "ask_dietary",
-                "question": "Do you have any dietary restrictions or preferences I should know about?"
+                "question": "Do you have any dietary restrictions or preferences I should know about?",
+                "specify_question": "Please specify: vegetarian, vegan, kosher, or halal"
             },
             {
                 "id": 5,
                 "is_essential": True,
                 "state": "ask_cuisine",
-                "question": "What type of cuisine interests you today?"
+                "question": "What type of cuisine would you like to try?",
+                "specify_question": "Choose cuisine: italian, chinese, indian, mexican, japanese, thai, french"
             },
             {
                 "id": 6,
                 "is_essential": True,
                 "state": "ask_time_day",
-                "question": "When would you like to dine? Please provide day and time."
+                "question": "When would you like to dine? Please provide day and time.",
+                "specify_question": "Specify time: today, tomorrow, specific time (e.g., 7pm), morning, evening"
             },
             {
                 "id": 7,
                 "is_essential": True,
                 "state": "ask_guests",
-                "question": "How many people will be joining you?"
+                "question": "How many people will be joining you?",
+                "specify_question": "Please be more specific: alone, solo, couple"
             },
             {
                 "id": 8,
                 "is_essential": True,
                 "state": "ask_location",
-                "question": "Which area would you prefer to dine in?"
+                "question": "Which area would you prefer to dine in?",
+                "specify_question": "Specify location: near me, nearby, in the area, in the city"
             },
             {
                 "id": 9,
                 "is_essential": False,
                 "state": "ask_budget",
                 "question": "What's your comfortable budget range for this meal? Options are 'cheap', 'moderate' and 'expensive'."
-            },
-            {
-                "id": 10,
-                "is_essential": False,
-                "state": "suggest_special",
-                "question": lambda sentiment: self.sentiment_responses[sentiment]["suggest_special"]
             }
         ]
 
@@ -154,8 +154,6 @@ class Conversation(Sentiment, Response):
             session[f'sentiment_{user_id}'] = sentiment
             session[f'is_urgent_{user_id}'] = is_urgent
 
-        
-
         # Get next question based on current state
         next_step = current_step + 1
 
@@ -166,12 +164,18 @@ class Conversation(Sentiment, Response):
             next_step = self.get_next_step(next_step=next_step, user_id=user_id)
 
 
-        # If the current step is an essential step but no user info os stored, repeat the question
+        # If the current step is an essential step but no user info is stored, repeat the question
         if self.conversation_flow[current_step]["is_essential"] and current_state not in session.get(f'user_info_{user_id}').keys():
             return jsonify({
+                "user_id": user_id,
                 "state": current_state,
+                "sentiment": sentiment,
+                "current_step": current_step,
+                "current_conversation": responses,
+                "user_info": session.get(f'user_info_{user_id}', {}),
+                "next_state": self.conversation_flow[next_step]["state"],
                 "question": self.conversation_flow[current_step]["question"],
-                "response": "I'm sorry, I didn't catch that. Can you please repeat?"
+                "next_question": self.conversation_flow[current_step]["specify_question"],
             }), 200
 
         if next_step < len(self.conversation_flow):
@@ -198,14 +202,13 @@ class Conversation(Sentiment, Response):
             self.advance_step(user_id)
 
             return jsonify({
-                "response": self.get_sentiment_response(sentiment, user_text) if current_state != "greet" else "Thank you for sharing! Let me help you find the perfect restaurant.",
-                "next_question": next_question,
-                "next_state": self.conversation_flow[next_step]["state"],
-                "sentiment": sentiment,
-                "current_conversation": responses,
                 "user_id": user_id,
+                "sentiment": sentiment,
+                "current_step": current_step,
+                "next_question": next_question,
+                "current_conversation": responses,
                 "user_info": session.get(f'user_info_{user_id}', {}),
-                "current_step": current_step
+                "next_state": self.conversation_flow[next_step]["state"],
             }), 200
         else:
             # If we have all essential info, make a recommendation

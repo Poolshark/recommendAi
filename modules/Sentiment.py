@@ -7,22 +7,18 @@ class Sentiment:
             "happy": {
                 "ask_occasion": "Are you celebrating something special today?",
                 "ask_atmosphere": "Would you prefer a lively, upbeat atmosphere to match your mood?",
-                "suggest_special": "I know some fantastic places with amazing ambiance that you might love!"
             },
             "neutral": {
                 "ask_occasion": "Is this a casual dining experience or something specific you're looking for?",
                 "ask_atmosphere": "What kind of atmosphere would you prefer - something relaxed or more energetic?",
-                "suggest_special": "I can recommend some interesting places that might pique your interest."
             },
             "sad": {
                 "ask_occasion": "Would you prefer a quiet, cozy place where you can relax?",
                 "ask_atmosphere": "How about a restaurant with a warm, comfortable atmosphere?",
-                "suggest_special": "I know some wonderful comfort food places that might help cheer you up."
             },
             "urgent": {
-                "ask_occasion": "Quick check - any special requirements I should know about?",
+                "ask_occasion": "Any special requirements I should know about?",
                 "ask_atmosphere": "For quick service, would you prefer casual dining or fast-casual?",
-                "suggest_special": "I can recommend places known for quick service and minimal wait times.",
                 "ask_time_day": "When do you need the table? I'll prioritize restaurants with immediate availability."
             }
         }
