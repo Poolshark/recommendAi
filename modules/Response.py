@@ -1,5 +1,12 @@
 import re
 from flask import session
+
+# ------------------------------------------
+# Response Module
+# ------------------------------------------
+# This module is responsible for generating responses
+# based on user preferences.
+# ------------------------------------------
 class Response:
     def __init__(self):
         

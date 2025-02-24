@@ -2,8 +2,14 @@ from flask import session, jsonify
 from modules.Response import Response
 from modules.Sentiment import Sentiment
 from modules.Recommend import Recommend
-from models.recommendation import Recommendation, db
 
+# ------------------------------------------
+# Conversation Module
+# ------------------------------------------
+# This module is responsible for the conversation flow
+# It uses the Sentiment and Response modules to generate responses
+# It also uses the Recommend module to generate recommendations
+# ------------------------------------------
 class Conversation(Sentiment, Response):
     def __init__(self):
         Sentiment.__init__(self)  # Initialize Sentiment
@@ -82,10 +88,14 @@ class Conversation(Sentiment, Response):
 
     # Helper function: get current conversation index
     def get_current_step(self, user_id: str):
+        """Get the current step of the conversation"""
+        
         return session.get(f'current_step_{user_id}', 0)
 
     # Helper function: advance conversation state
     def advance_step(self, user_id: str):
+        """Advance the conversation state"""
+
         current = self.get_current_step(user_id)
         if current < len(self.conversation_flow) - 1:
             session[f'current_step_{user_id}'] = current + 1
@@ -94,7 +104,7 @@ class Conversation(Sentiment, Response):
             session[f'current_step_{user_id}'] = current
     
     def get_next_step(self, next_step: int, user_id: str):
-        
+        """Get the next step of the conversation"""
         is_urgent = session.get(f'is_urgent_{user_id}', False)
 
         while next_step < len(self.conversation_flow):
@@ -110,10 +120,11 @@ class Conversation(Sentiment, Response):
 
         return next_step
     
-    # Start or reset the conversation
-    # This method is called via the /start_conversation endpoint
     def start_conversation(self, user_id: str, user_name: str="Mr. Food"):
-        """Initialize or reset the conversation"""
+        """
+        Start or reset the conversation.
+        This method is called via the /start_conversation endpoint
+        """
         
         # Initialize or reset the conversation for this user
         session[f'responses_{user_id}'] = {}
@@ -130,9 +141,12 @@ class Conversation(Sentiment, Response):
             "next_question": self.conversation_flow[0]["question"](user_name)
         }
     
-    # Process user input and return the next question
-    # This method is called via the /process_input endpoint
     def process_input(self, user_text: str, user_id: str):
+        """
+        Process user input and return the next question
+        This method is called via the /process_input endpoint
+        """
+
         current_step = self.get_current_step(user_id)
         current_state = self.conversation_flow[current_step]["state"]
 
@@ -213,8 +227,6 @@ class Conversation(Sentiment, Response):
         else:
             # If we have all essential info, make a recommendation
             user_info = session.get(f'user_info_{user_id}', {})
-            # essential_fields = {'ask_cuisine', 'ask_location', 'ask_guests', 'ask_time_day', 'ask_dietary'}
-            # if all(field in user_info for field in essential_fields):
             recommendation = self.recommend.get_recommendation(user_info, user_id)
             if recommendation:
                 return jsonify({
@@ -231,16 +243,4 @@ class Conversation(Sentiment, Response):
                 "sentiment": sentiment,
                 "current_conversation": responses,
             }), 200
-
-    # def store_recommendation(self, user_id: str, recommendation_data: dict):
-    #     recommendation = Recommendation(
-    #         user_id=user_id,
-    #         restaurant_name=recommendation_data.get('name'),
-    #         cuisine=recommendation_data.get('cuisine'),
-    #         location=recommendation_data.get('location'),
-    #         guests=recommendation_data.get('guests'),
-    #         dietary=recommendation_data.get('dietary'),
-    #         booking_time=recommendation_data.get('booking_time')
-    #     )
-    #     db.session.add(recommendation)
-    #     db.session.commit()
+        

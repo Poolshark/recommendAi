@@ -1,6 +1,12 @@
 from models.db import db  # Import the shared db instance
 from datetime import datetime
 
+# ------------------------------------------
+# Recommendation Model
+# ------------------------------------------
+# This model is responsible for storing restaurant recommendations
+# in the database.
+# ------------------------------------------
 class Recommendation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String(50), nullable=False)
@@ -26,8 +32,11 @@ class Recommendation(db.Model):
     photo_url = db.Column(db.String(500))
     latitude = db.Column(db.Float)
     longitude = db.Column(db.Float)
+    website_url = db.Column(db.String(500))
+    maps_url = db.Column(db.String(500)) 
 
     def to_dict(self):
+        """Convert the recommendation to a dictionary"""
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -48,5 +57,7 @@ class Recommendation(db.Model):
             'place_id': self.place_id,
             'photo_url': self.photo_url,
             'latitude': self.latitude,
-            'longitude': self.longitude
+            'longitude': self.longitude,
+            'website_url': self.website_url,
+            'maps_url': self.maps_url
         }

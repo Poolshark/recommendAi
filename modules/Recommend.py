@@ -4,6 +4,15 @@ from datetime import datetime
 from modules.RatingApi import RatingApi
 from models.recommendation import Recommendation, db
 
+# ------------------------------------------
+# Recommendation Module
+# ------------------------------------------
+# This module is responsible for generating restaurant recommendations
+# based on user preferences.
+# It uses the RatingApi module to fetch restaurant data from Google Places.
+# It also uses the Recommendation model to store the recommendations 
+# in the database.
+# ------------------------------------------
 class Recommend:
     def __init__(self):
         self.rating_api = RatingApi()
@@ -154,7 +163,9 @@ class Recommend:
             'place_id': best_match.get('place_id'),
             'photo_url': best_match.get('photo_url'),
             'latitude': best_match.get('geometry', {}).get('location', {}).get('lat'),
-            'longitude': best_match.get('geometry', {}).get('location', {}).get('lng')
+            'longitude': best_match.get('geometry', {}).get('location', {}).get('lng'),
+            'website_url': best_match.get('website_url'),
+            'maps_url': best_match.get('maps_url')
         }
         
         # Store recommendation with user_id
@@ -176,7 +187,9 @@ class Recommend:
             place_id=recommendation_data.get('place_id'),
             photo_url=recommendation_data.get('photo_url'),
             latitude=recommendation_data.get('latitude'),
-            longitude=recommendation_data.get('longitude')
+            longitude=recommendation_data.get('longitude'),
+            website_url=recommendation_data.get('website_url'),
+            maps_url=recommendation_data.get('maps_url')
         )
         db.session.add(recommendation)
         db.session.commit()

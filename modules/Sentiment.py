@@ -1,5 +1,11 @@
 from textblob import TextBlob
 
+# ------------------------------------------
+# Sentiment Module
+# ------------------------------------------
+# This module is responsible for analyzing the sentiment of user messages
+# and generating appropriate responses based on the sentiment.
+# ------------------------------------------
 class Sentiment:
     def __init__(self):
         # Define sentiment-specific questions and responses
@@ -64,9 +70,10 @@ class Sentiment:
         return urgency_score >= 1
     
     def analyze_sentiment(self, user_text: str):
+        """Analyze the sentiment of the user's message"""
+
         blob = TextBlob(user_text)
         sentiment = blob.sentiment.polarity
-        subjectivity = blob.sentiment.subjectivity
         
         # Enhanced sentiment analysis with subjectivity consideration
         if sentiment > 0.3:
@@ -79,20 +86,20 @@ class Sentiment:
 
     def make_question_urgent(self, question: str) -> str:
         """Make questions more concise for urgent cases"""
+
         # Remove pleasantries and make questions more direct
         question = question.replace("Would you like", "Do you want")
         question = question.replace("Please provide", "Enter")
         question = question.replace("I would love to know", "Tell me")
         question = question.replace("Could you tell me", "What is")
         
-        # Add urgency indicators when appropriate
-        # if "when" in question.lower():
-        #     question = "ASAP: " + question
-        
         return question
 
     def get_follow_up_question(self, sentiment, responses):
-        """Generate follow-up questions based on sentiment and previous responses"""
+        """
+        Generate follow-up questions based on sentiment and 
+        previous responses
+        """
 
         if sentiment == "urgent":
             if "time_day" not in responses:

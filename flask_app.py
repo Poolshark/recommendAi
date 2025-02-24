@@ -1,9 +1,7 @@
-# A very simple Flask Hello World app for you to get started with...
 import os
 from git import Repo
 from models.db import db
 from flask_cors import CORS
-from textblob import TextBlob
 from dotenv import load_dotenv
 from datetime import timedelta
 from flask_migrate import Migrate
@@ -63,15 +61,11 @@ def git_update():
         return jsonify({"error": str(e)}), 500
     
 # Endpoint to start a new conversation
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['POST'])
 def start_conversation():
     data = get_json_payload()
     if not data or 'user_id' not in data:
         return jsonify({"error": "Missing user_id in request"}), 400
-    
-    # Start a new conversation if the user wants to do so
-    if 'start_new_conversation' in data and data['start_new_conversation']:
-        return conversation.start_conversation(data['user_id'], user_name=data['user_name'])
     
     # Start a new conversation and get recommendations
     conv = conversation.start_conversation(data['user_id'], user_name=data['user_name'])
@@ -97,36 +91,6 @@ def process_input():
 
     return conversation.process_input(user_text, user_id)
 
-# Endpoint to perform sentiment analysis - TESTING
-@app.route('/sentiment_analysis', methods=['POST'])
-def sentiment_analysis():
-    # Retrieve the JSON payload
-    data = get_json_payload()
-    if not data:
-        return jsonify({"error": "Missing or invalid JSON payload."}), 400
-
-    if 'text' not in data:
-        return jsonify({"error": "Missing 'text' parameter in JSON payload."}), 400
-
-    user_text = data['text']
-
-    # Analyze the sentiment using TextBlob
-    blob = TextBlob(user_text)
-    sentiment = blob.sentiment  # Returns a namedtuple with polarity and subjectivity
-
-    # Format the result
-    sentiment_result = {
-        "polarity": sentiment.polarity,
-        "subjectivity": sentiment.subjectivity,
-        "interpretation": (
-            "positive" if sentiment.polarity > 0
-            else "negative" if sentiment.polarity < 0
-            else "neutral"
-        )
-    }
-
-    return jsonify(sentiment_result)
-
 # Add endpoint to get user's recommendations
 @app.route('/recommendations/<user_id>', methods=['GET'])
 def get_recommendations(user_id):
@@ -134,6 +98,7 @@ def get_recommendations(user_id):
     recommendations = Recommendation.query.filter_by(user_id=user_id).order_by(Recommendation.created_at.desc()).all()
     return jsonify([r.to_dict() for r in recommendations])
 
+# Start the Flask app if in development mode
 if __name__ == '__main__':
     # When running locally, enable debug mode for development
     app.run(debug=True)
