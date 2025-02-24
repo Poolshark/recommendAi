@@ -18,7 +18,8 @@ class RatingApi:
             # },
             "google": {
                 "api_key": os.getenv('GOOGLE_API_KEY'),
-                "base_url": "https://maps.googleapis.com/maps/api/place/textsearch/json"
+                "base_url": "https://maps.googleapis.com/maps/api/place/textsearch/json",
+                "photo_url": "https://maps.googleapis.com/maps/api/place/photo"
             },
             # "tripadvisor": {
             #     "api_key": os.getenv('TRIPADVISOR_API_KEY'),
@@ -41,7 +42,15 @@ class RatingApi:
         
         response = requests.get(url)
         if response.status_code == 200:
-            return response.json().get('results', [])
+            results = response.json().get('results', [])
+            
+            # Add photo URL for each result that has photos
+            for result in results:
+                if result.get('photos'):
+                    photo_reference = result['photos'][0]['photo_reference']  # Get first photo reference
+                    result['photo_url'] = self.get_photo_url(photo_reference)
+            
+            return results
         else:
             return []
 

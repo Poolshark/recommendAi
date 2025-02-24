@@ -136,8 +136,6 @@ class Recommend:
             return None
         
         best_match = scored_restaurants[0][0]
-
-        print("\n\n\nBEST MATCH", best_match, "\n\n\n")
         
         # Enhanced recommendation data
         recommendation_data = {
@@ -153,19 +151,32 @@ class Recommend:
             'total_ratings': best_match.get('user_ratings_total'),
             'price_level': best_match.get('price_level'),
             'address': best_match.get('formatted_address'),
-            'place_id': best_match.get('place_id')
+            'place_id': best_match.get('place_id'),
+            'photo_url': best_match.get('photo_url'),
+            'latitude': best_match.get('geometry', {}).get('location', {}).get('lat'),
+            'longitude': best_match.get('geometry', {}).get('location', {}).get('lng')
         }
         
         # Store recommendation with user_id
         recommendation = Recommendation(
             user_id=user_id,
             user_name=session.get(f'user_name_{user_id}', ''),
-            restaurant_name=recommendation_data['name'],
-            cuisine=recommendation_data['cuisine'],
-            location=recommendation_data['location'],
-            guests=recommendation_data['guests'],
-            dietary=recommendation_data['dietary'],
-            booking_time=recommendation_data['booking_time']
+            restaurant_name=recommendation_data.get('name'),
+            cuisine=recommendation_data.get('cuisine'),
+            location=recommendation_data.get('location'),
+            guests=recommendation_data.get('guests'),
+            dietary=recommendation_data.get('dietary'),
+            booking_time=recommendation_data.get('booking_time'),
+            atmosphere=recommendation_data.get('atmosphere'),
+            budget=recommendation_data.get('budget'),
+            rating=recommendation_data.get('rating'),
+            total_ratings=recommendation_data.get('total_ratings'),
+            price_level=recommendation_data.get('price_level'),
+            address=recommendation_data.get('address'),
+            place_id=recommendation_data.get('place_id'),
+            photo_url=recommendation_data.get('photo_url'),
+            latitude=recommendation_data.get('latitude'),
+            longitude=recommendation_data.get('longitude')
         )
         db.session.add(recommendation)
         db.session.commit()

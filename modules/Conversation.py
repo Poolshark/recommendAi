@@ -232,15 +232,15 @@ class Conversation(Sentiment, Response):
                 "current_conversation": responses,
             }), 200
 
-    def store_recommendation(self, user_id: str, recommendation_data: dict):
-        recommendation = Recommendation(
-            user_id=user_id,
-            restaurant_name=recommendation_data.get('name'),
-            cuisine=recommendation_data.get('cuisine'),
-            location=recommendation_data.get('location'),
-            guests=recommendation_data.get('guests'),
-            dietary=recommendation_data.get('dietary'),
-            booking_time=recommendation_data.get('booking_time')
-        )
-        db.session.add(recommendation)
-        db.session.commit()
+    # def store_recommendation(self, user_id: str, recommendation_data: dict):
+    #     recommendation = Recommendation(
+    #         user_id=user_id,
+    #         restaurant_name=recommendation_data.get('name'),
+    #         cuisine=recommendation_data.get('cuisine'),
+    #         location=recommendation_data.get('location'),
+    #         guests=recommendation_data.get('guests'),
+    #         dietary=recommendation_data.get('dietary'),
+    #         booking_time=recommendation_data.get('booking_time')
+    #     )
+    #     db.session.add(recommendation)
+    #     db.session.commit()
