@@ -15,11 +15,11 @@ class Response:
             'ask_occasion': r'(party|date|dinner|lunch|breakfast|brunch|tea|coffee|drinks|snacks|food|romantic|special occasion|casual|formal)',
             'ask_atmosphere': r'(quiet|loud|cozy|comfortable|warm|cool|dark|bright|dim|outside|inside|outdoor|indoor)',
             'ask_booking_history': r'(no|yes|first time|regular)',
-            'ask_dietary': r'(vegetarian|vegan|kosher|halal)',
+            'ask_dietary': r'(vegetarian|vegan|kosher|halal|no restrictions)',
             'ask_cuisine': r'(italian|chinese|indian|mexican|japanese|thai|french|traditional|fusion|street food|healthy|fast food)',
             'ask_time_day': r'(today|tomorrow|(?:at\s+)?\d{1,2}(?::\d{2})?(?:\s*[ap]m)|morning|evening|noon|tonight|now)',
-            'ask_guests': r'(?:table\s+for\s+|party\s+of\s+|^|\s+)(\d+)(?:\s+people|\s+persons?|$)|(?:alone|solo|couple)',
-            'ask_location': r'(here|near|near me|nearby|near my location|in the area|in the neighborhood|in the city|in the town|in the village|in the county|in the state|in the region|in the district)',
+            'ask_guests': r'(?:table\s+for\s+|party\s+of\s+|^|\s+)(\d+|one|two|three|four|five|six|seven|eight|nine|ten)(?:\s+people|\s+persons?|$)|(?:alone|solo|couple)',
+            'ask_location': r'(here|near|near me|nearby|near my location|in the area|in the neighborhood|in the city|in the town|in the village|in the region|close by|close to me|close to my location)',
             'ask_budget': r'(cheap|moderate|expensive)',
         }
 

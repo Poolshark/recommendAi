@@ -49,21 +49,32 @@ class Recommend:
 
         return None
 
-    def parse_guests(self, guests_str):
-        """Convert guests string to number"""
+    def parse_guests(self, guests_str: str) -> int:
+        """Convert various guest number formats to integers"""
+        
         if not guests_str:
             return 1
-        
-        if 'alone' in guests_str or 'solo' in guests_str:
-            return 1
-        if 'couple' in guests_str:
-            return 2
-        
-        # Extract number from string
-        match = re.search(r'(\d+)', guests_str)
-        if match:
-            return int(match.group(1))
-        return 1
+
+        # Dictionary for word to number conversion
+        word_to_number = {
+            'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+            'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+            'alone': 1, 'solo': 1, 'couple': 2
+        }
+
+        guests_str = guests_str.lower().strip()
+
+        # Check if it's a word number
+        if guests_str in word_to_number:
+            return word_to_number[guests_str]
+
+        # Try to extract numeric value
+        try:
+            # Remove any non-numeric characters and convert to int
+            num = int(''.join(filter(str.isdigit, guests_str)))
+            return num if num > 0 else 1
+        except (ValueError, TypeError):
+            return 1  # Default to 1 if conversion fails
 
     def get_recommendation(self, user_info: dict, user_id: str):
         """Generate restaurant recommendation based on user preferences"""
