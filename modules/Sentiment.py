@@ -3,7 +3,7 @@ from textblob import TextBlob
 # ------------------------------------------
 # Sentiment Module
 # ------------------------------------------
-# This module is responsible for analyzing the sentiment of user messages
+# This module is responsible for analysing the sentiment of user messages
 # and generating appropriate responses based on the sentiment.
 # ------------------------------------------
 class Sentiment:

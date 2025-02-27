@@ -1,9 +1,9 @@
 Flask
-textblob
-GitPython
+Flask-Cors
 Flask-Session
-requests
-flask-cors
-python-dotenv
-Flask-SQLAlchemy
 Flask-Migrate
+Flask-SQLAlchemy
+GitPython
+textblob
+requests
+python-dotenv
