@@ -23,7 +23,20 @@ is intended to work with a **mobile app**, which is availabe
 intention to make the mobile app publicly avaulable via the app store.
 
 ## 🚀 Getting Started (Local Setup)
-After cloning the repository, run
+After cloning the repository, you have toset up the local virtual environment by
+running
+
+```bash
+python3 -m venv venv
+soure venv/bin/activate
+```
+
+You can deactive the environment by running
+```
+deactivate
+```
+
+Then install all necessary libraries by running
 
 ```bash
 pip3 install -r requirements.txt
