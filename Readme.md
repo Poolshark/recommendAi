@@ -1,4 +1,4 @@
-# 🤖 Recommendy - Restaurant Recommendation Engine
+# 🤖 Recommendy - Restaurant Recommendation NLP Engine
 **Recommendy** is a restaurant recommendation engine that uses natural
 language processing to recommend restaurants based on user preferences.
 This project is built with Flask and uses the following modules:
@@ -122,7 +122,7 @@ METHOD: POST
 BODY:
 {
     "user_id": "123",
-    "text": "I wnat to book a table for 2 today at 7pm"
+    "text": "I want to book a table for 2 today at 7pm"
 }
 ```
 
